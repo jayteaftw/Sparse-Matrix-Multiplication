@@ -276,26 +276,31 @@ static csr_t * csr_duplication(csr_t *mat, float factor){
  * @param C  Output matrix
  */
 idx_t block_sparse_mat_mult(csr_t * A, csr_t * B, csr_t *C, idx_t a_start, idx_t a_end){
-	idx_t c_max_nnz = A->nrows * 10;
+	idx_t c_max_nnz = (a_end - a_start) * 10;
   	idx_t c_nnz = 0;
   	int ind_val_idx = 0;
   	int ptr_idx = 0;
-	val_t dense_A_vector[A->ncols];
+	//val_t dense_A_vector[10000] ;
+	val_t *dense_A_vector{new val_t[A->nrows]{}};
 
-  	C->reserve(A->nrows + 1, c_max_nnz);
+  	C->reserve(A->nrows, c_max_nnz);
   	C->ptr[ptr_idx] = 0;
   	ptr_idx++;
-	
+	//cout<<"Here"<<endl;
 	for (idx_t r = a_start; r < a_end; r++){
 
+		
+		if(r % 1000 == 0){
+			cout<<"ThreadID:"<<omp_get_thread_num()<<","<<a_start<<"~"<<a_end<<endl;
+		}
+		
+
 		//Set A vector to all zeros
-		#pragma omp parallel for
 		for(idx_t i =0; i < A->ncols; i++){
 			dense_A_vector[i] = 0;
 		}
 
 		//Create A vector for row r
-		#pragma omp parallel for
 		for(idx_t i = (A->ptr)[r]; i < (A->ptr)[r+1]; i++){
 			dense_A_vector[(A->ind)[i]] = (A->val)[i];
 		}		
@@ -304,27 +309,28 @@ idx_t block_sparse_mat_mult(csr_t * A, csr_t * B, csr_t *C, idx_t a_start, idx_t
 		for (idx_t c = 0; c < B->nrows; c++){
 		
 			val_t val = 0;
-			#pragma omp parallel for reduction(+: val)
 			for(idx_t n = (B->ptr)[c]; n < (B->ptr)[c+1]; n++){
 				val += dense_A_vector[(B->ind)[n]] * (B->val)[n];
 			}
 			//cout<<"Val:"<<val<<endl;
 		
-		//If Val is non-zero, added it to sub CSR
-      	if (val != 0){
-        	c_nnz += 1;
-        	if(c_nnz >= c_max_nnz){
-				c_max_nnz = int(1.5*c_max_nnz);
-				C->reserve(A->nrows + 1, c_max_nnz);
-        	}
-			//cout<<"made it 1"<<endl;
-        	C->ind[ind_val_idx] = c;
-			//cout<<"made it 2: "<<c_max_nnz<<endl;
-			//cout<<val<<endl;
-        	C->val[ind_val_idx] = val;
-			//cout<<"made it 3"<<endl;
-        	ind_val_idx ++;
-      	}
+			//If Val is non-zero, added it to sub CSR
+			if (val != 0){
+				c_nnz += 1;
+				if(c_nnz >= c_max_nnz){
+					c_max_nnz = int(2*c_max_nnz);
+					//C->reserve(A->nrows + 1, c_max_nnz);
+					C->ind = (idx_t*) realloc(C->ind, sizeof(idx_t) * c_max_nnz);
+					C->val = (val_t*) realloc(C->val, sizeof(val_t) * c_max_nnz);
+				}
+				//cout<<"made it 1 "<<ind_val_idx<<","<<c_max_nnz<<", "<<c<<endl;
+				C->ind[ind_val_idx] = c;
+				//cout<<"made it 2: "<<c_max_nnz<<endl;
+				//cout<<val<<endl;
+				C->val[ind_val_idx] = val;
+				//cout<<"made it 3"<<endl;
+				ind_val_idx ++;
+			}
 		}
 		C->ptr[ptr_idx] = c_nnz;
 		ptr_idx++;
@@ -422,12 +428,14 @@ int main(int argc, char *argv[])
 	/* initialize random seed: */
 	srand (time(NULL));
 
+	omp_set_num_threads(28);
 	auto A = csr_t::random(nrows, ncols, factor);
 	auto B = csr_t::random(ncols2, ncols, factor); // Note B is already transposed.
 	test_matrix(A);
 	test_matrix(B);
+	cout<<"Built A and B"<<endl;
 
-	int threadcount[10] = {1,2,4,8,12,14,16,20,24,28};
+	int threadcount[10] = {28,2,4,8,12,14,16,20,24,28};
 
 	string printString;
     string excel_print[10];
@@ -437,11 +445,13 @@ int main(int argc, char *argv[])
 	cout<<"Thread Count: ";
 	
 	 // Note that C has no data allocations so far.
-	A = csr_t::random(nrows, ncols, factor);
 	auto C = new csr_t();
 	for(int i = 0; i < 10; i++){
-		C = new csr_t();	
-		B = csr_t::random(ncols2, ncols, factor);
+		C = new csr_t();
+		omp_set_num_threads(28);	
+		//B = csr_t::random(ncols2, ncols, factor);
+		//test_matrix(B);
+		
 		std::stringstream ss; 
 		omp_set_num_threads(threadcount[i]);
 		cout<<setfill(' ') << setw(10)<<threadcount[i]<<",";

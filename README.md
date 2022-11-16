@@ -114,20 +114,20 @@ Since the program, uses a vector of size A.num_columns as a performance boost to
 Moreover as seen in figure 2, more threads do not necessarily mean better performance. In the case of 9000x35000*35000x5750 and 10000x10000*10000x10000 multiplication, although a major performance increase was found ranging from going from 1 thread to 16 threads for the 2 matrices mentioned above, both times there was a major degradation in performance at 20 threads. This was very strange because the performance rose afterward for both 24 and 28 threads: this seems to be unexplainable with the current knowledge and more investigation should be done. However, performance always increased for 20000x5300*5300x50000, although, at a slower pace.
 
 **Figure 2: Strong Scaling Chart of Average, in terms of Fill Factor, Speedup for all 3 Matrices**
-`<img src="https://github.com/jayteaftw/Sparse-Matrix-Multiplication/blob/master/imgs/figure2.png" height="700" />`
+<img src="https://github.com/jayteaftw/Sparse-Matrix-Multiplication/blob/master/imgs/figure2.png" height="700" />
 
 Furthermore as seen in figure 3, the program is not scalable in terms of threads.  The rate of change of speedup decreases stagnates, and or fluctuates when increasing the number of threads.  These diminishing returns show that the greatest performance gains are made around 8 threads.
 
 **Figure 3: Rate of Change Strong Scaling Chart of Average, in terms of Fill Factor, Speedup for all 3 Matrices**
-`<img src="https://github.com/jayteaftw/Sparse-Matrix-Multiplication/blob/master/imgs/figure3.png" height="700" />`
+<img src="https://github.com/jayteaftw/Sparse-Matrix-Multiplication/blob/master/imgs/figure3.png" height="700" />
 
 When examining, the strong scaling chart for the average speedup in terms of thread count, we can see that there are hardly any gains being made with both the speedup and the speedup’s rate of change being overall constant as seen in figures 4 and 5. Furthermore, both 9000x35000*35000x5750 and 10000x10000*10000x10000 matrix multiplications outperformed the 20000x5300*5300x50000 matrix multiplication which follows since the latter matrix multiplication is much larger than the former matrices, and therefore there is an increases the number of computations and overall execution time of the program. Also as discussed before, the program favors matrices with larger column sizes for matrix A which could be another factor of why the 20000x5300*5300x50000 matrix multiplication performed noticeably worse.
 
 **Figure 4: Strong Scaling Chart of Average, in terms of Thread Count, Speedup for all 3 Matrices**
-`<img src="https://github.com/jayteaftw/Sparse-Matrix-Multiplication/blob/master/imgs/figure4.png" height="500" />`
+<img src="https://github.com/jayteaftw/Sparse-Matrix-Multiplication/blob/master/imgs/figure4.png" height="500" />
 
 **Figure 5: Rate of Change Strong Scaling Chart of Average, in terms of Thread Count, Speedup for all 3 Matrices**
-`<img src="https://github.com/jayteaftw/Sparse-Matrix-Multiplication/blob/master/imgs/figure5.png" height="500" />`
+<img src="https://github.com/jayteaftw/Sparse-Matrix-Multiplication/blob/master/imgs/figure5.png" height="500" />
 
 ## Appendicies
 

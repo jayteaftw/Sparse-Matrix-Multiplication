@@ -246,27 +246,6 @@ void sort_csr(csr_t *mat){
   	}
 }
 
-
-static csr_t * csr_duplication(csr_t *mat, float factor){
-	
-	auto mat_dup = new csr_t();
-	ptr_t nnz = (ptr_t) (factor * mat->nrows * mat->ncols);
-
-	mat_dup->nrows = mat->nrows;
-	mat_dup->ncols = mat->ncols;
-	
-	mat_dup->reserve(mat->nrows, nnz);
-	for(ptr_t i =0; i<mat->nrows+1;i++){
-		mat_dup->ptr[i] = mat->ptr[i];
-	}
-
-	for(ptr_t i =0; i<nnz+1;i++){
-		mat_dup->ind[i] = mat->ind[i];
-		mat_dup->val[i] = mat->val[i];
-	}
-	return mat_dup;
-}
-
 /**
  * Multiply A and B (transposed given) and write output in C.
  * Note that C has no data allocations (i.e., ptr, ind, and val pointers are null).
@@ -281,18 +260,17 @@ idx_t block_sparse_mat_mult(csr_t * A, csr_t * B, csr_t *C, idx_t a_start, idx_t
   	int ind_val_idx = 0;
   	int ptr_idx = 0;
 	//val_t dense_A_vector[10000] ;
-	val_t *dense_A_vector{new val_t[A->nrows]{}};
+	val_t *dense_A_vector{new val_t[A->ncols]{}};
 
   	C->reserve(A->nrows, c_max_nnz);
   	C->ptr[ptr_idx] = 0;
   	ptr_idx++;
-	//cout<<"Here"<<endl;
 	for (idx_t r = a_start; r < a_end; r++){
 
 		
-		if(r % 1000 == 0){
+/* 		if(r % 1000 == 0){
 			cout<<"ThreadID:"<<omp_get_thread_num()<<","<<a_start<<"~"<<a_end<<endl;
-		}
+		} */
 		
 
 		//Set A vector to all zeros
@@ -312,23 +290,18 @@ idx_t block_sparse_mat_mult(csr_t * A, csr_t * B, csr_t *C, idx_t a_start, idx_t
 			for(idx_t n = (B->ptr)[c]; n < (B->ptr)[c+1]; n++){
 				val += dense_A_vector[(B->ind)[n]] * (B->val)[n];
 			}
-			//cout<<"Val:"<<val<<endl;
+
 		
 			//If Val is non-zero, added it to sub CSR
 			if (val != 0){
 				c_nnz += 1;
 				if(c_nnz >= c_max_nnz){
 					c_max_nnz = int(2*c_max_nnz);
-					//C->reserve(A->nrows + 1, c_max_nnz);
 					C->ind = (idx_t*) realloc(C->ind, sizeof(idx_t) * c_max_nnz);
 					C->val = (val_t*) realloc(C->val, sizeof(val_t) * c_max_nnz);
 				}
-				//cout<<"made it 1 "<<ind_val_idx<<","<<c_max_nnz<<", "<<c<<endl;
 				C->ind[ind_val_idx] = c;
-				//cout<<"made it 2: "<<c_max_nnz<<endl;
-				//cout<<val<<endl;
 				C->val[ind_val_idx] = val;
-				//cout<<"made it 3"<<endl;
 				ind_val_idx ++;
 			}
 		}
@@ -338,9 +311,6 @@ idx_t block_sparse_mat_mult(csr_t * A, csr_t * B, csr_t *C, idx_t a_start, idx_t
 
 	C->nrows = a_end - a_start;
 	C->ncols = B->nrows;
-	//print_csr(C,"SUB_C: "+to_string(a_start));
-	//print_sparse_mat(C, "SUB_C: "+to_string(a_start));
-
   	return c_nnz;
 }
 
@@ -354,7 +324,7 @@ void sparsematmult(csr_t * A, csr_t * B, csr_t *C)
 	//print_sparse_mat(A, "A");
 	//print_sparse_mat(B, "B");
 	
-  	int block_size = int(0.001 * A->nrows);
+  	int block_size = int(0.01 * A->nrows);
 	if (block_size < 1){
 		block_size = 1;
 	}
@@ -400,7 +370,7 @@ void sparsematmult(csr_t * A, csr_t * B, csr_t *C)
 		base_ind += sub_C_nnz[idx];
 		free(sub_C_csr[idx]);
 	}
-	//print_sparse_mat(C, "C");  
+	//print_sparse_mat(C,"C");
 }
 
 
@@ -415,10 +385,7 @@ int main(int argc, char *argv[])
 	int ncols2 = atoi(argv[3]);
 	double factor = atof(argv[4]);
 	int nthreads = 1;
-	if(argc == 7 && strcasecmp(argv[5], "-t") == 0){
-		nthreads = atoi(argv[6]);
-		omp_set_num_threads(nthreads);
-	}
+	
 	cout << "A_nrows: " << nrows << endl;
 	cout << "A_ncols: " << ncols << endl;
 	cout << "B_ncols: " << ncols2 << endl;
@@ -435,43 +402,61 @@ int main(int argc, char *argv[])
 	test_matrix(B);
 	cout<<"Built A and B"<<endl;
 
-	int threadcount[10] = {28,2,4,8,12,14,16,20,24,28};
+	int threadcount[10] = {1,2,4,8,12,14,16,20,24,28};
 
 	string printString;
     string excel_print[10];
 	string line;
-
 	cout<<"Matrix: "<<nrows<<"x"<<ncols<<"*"<<ncols<<"x"<<ncols2<<", Factor: "<<factor<<endl;
-	cout<<"Thread Count: ";
-	
-	 // Note that C has no data allocations so far.
-	auto C = new csr_t();
-	for(int i = 0; i < 10; i++){
-		C = new csr_t();
-		omp_set_num_threads(28);	
-		//B = csr_t::random(ncols2, ncols, factor);
-		//test_matrix(B);
-		
-		std::stringstream ss; 
-		omp_set_num_threads(threadcount[i]);
-		cout<<setfill(' ') << setw(10)<<threadcount[i]<<",";
+	if(argc == 7 && strcasecmp(argv[5], "-t") == 0){
+		nthreads = atoi(argv[6]);
+		omp_set_num_threads(nthreads);
+		cout << "nthreads: " << nthreads << endl;
+		auto C = new csr_t();
 		auto t1 = omp_get_wtime();
 		sparsematmult(A, B, C);
 		auto t2 = omp_get_wtime();
-		ss<<setfill(' ') << setw(10)<< setprecision(4)<<(t2-t1)*1000000<<",";
-		printString += ss.str();
+		std::stringstream ss; 
+		ss<<setfill(' ')<< setprecision(4)<<(t2-t1)*1000000<<",";
+		cout<<"Thread:"<<nthreads<<" Time: "<<ss.str()<<endl;;;
+		cout << C->info("C") << endl;
+		delete C;
 	}
-	cout<<endl;
-	cout<<"Time(µs):     "+printString;
-	cout<<endl;
+	else
+	{
+
+		// Note that C has no data allocations so far.
+		auto C = new csr_t();
+		for(int i = 0; i < 10; i++){
+			C = new csr_t();
+			//omp_set_num_threads(28);	
+			//B = csr_t::random(ncols2, ncols, factor);
+			//test_matrix(B);
+			
+			std::stringstream ss; 
+			omp_set_num_threads(threadcount[i]);
+			cout<<setfill(' ') << setw(10)<<threadcount[i]<<",";
+			auto t1 = omp_get_wtime();
+			sparsematmult(A, B, C);
+			auto t2 = omp_get_wtime();
+			ss<<setfill(' ') << setw(10)<< setprecision(4)<<(t2-t1)*1000000<<",";
+			cout<<"Thread:"<<threadcount[i]<<", Time: "<<ss.str()<<endl;
+			printString += ss.str();
+			
+		}
+		cout<<endl;
+		cout<<"Time(µs):     "+printString;
+		cout<<endl;
+		cout << C->info("C") << endl;
+		delete C;
+	} 
 
 	cout << A->info("A") << endl;
 	cout << B->info("B") << endl;
-	cout << C->info("C") << endl;
+	
 
 	delete A;
 	delete B;
-	delete C;
 
 	return 0;
 }

@@ -73,7 +73,6 @@ After getting each experiment’s time, the speedup was calculated using the for
 | 28                         | 13.85 | 14.38 | 15.62 | 15.21 | 14.76           |
 | Avg Thread                 | 8.98  | 9.18  | 9.94  | 9.78  | 9.47            |
 
-
 **Table 3: 20000x5300*5300x50000 Matrix Speedup Time for Thread Count Vs Fill Factor compared to Sequential (1 Thread)**
 
 | Thread Count/  Fill Factor | 0.05  | 0.10  | 0.15  | 0.20  | Avg Fill Factor |
@@ -89,7 +88,6 @@ After getting each experiment’s time, the speedup was calculated using the for
 | 24                         | 13.88 | 13.82 | 15.23 | 15.04 | 14.49           |
 | 28                         | 13.85 | 14.38 | 15.62 | 15.21 | 14.76           |
 | Avg Thread                 | 8.98  | 9.18  | 9.94  | 9.78  | 9.47            |
-
 
 **Table 4: 9000x35000*35000x5750 Matrix Speedup Time for Thread Count Vs Fill Factor compared to Sequential (1 Thread)**
 
@@ -107,7 +105,6 @@ After getting each experiment’s time, the speedup was calculated using the for
 | 28                         | 13.85 | 14.38 | 15.62 | 15.21 | 14.76           |
 | Avg Thread                 | 8.98  | 9.18  | 9.94  | 9.78  | 9.47            |
 
-
 ## Analysis
 
 Overall, a greater number of threads provided a performance boost compared to the serial code as each thread was able to compute a subset of C  parallelly. The 9000x35000*35000x5750 matrix multiplication performed the best on average with a speedup of 9.70 while 10000x10000*10000x10000 multiplication followed at a close second with an average speedup of 9.41. Lastly, 20000x5300*5300x50000 matrix multiplication had the worse average speedup of 6.61.
@@ -117,25 +114,69 @@ Since the program, uses a vector of size A.num_columns as a performance boost to
 Moreover as seen in figure 2, more threads do not necessarily mean better performance. In the case of 9000x35000*35000x5750 and 10000x10000*10000x10000 multiplication, although a major performance increase was found ranging from going from 1 thread to 16 threads for the 2 matrices mentioned above, both times there was a major degradation in performance at 20 threads. This was very strange because the performance rose afterward for both 24 and 28 threads: this seems to be unexplainable with the current knowledge and more investigation should be done. However, performance always increased for 20000x5300*5300x50000, although, at a slower pace.
 
 **Figure 2: Strong Scaling Chart of Average, in terms of Fill Factor, Speedup for all 3 Matrices**
-<img src="https://github.com/jayteaftw/Sparse-Matrix-Multiplication/blob/master/imgs/figure2.png" height="700" />
+`<img src="https://github.com/jayteaftw/Sparse-Matrix-Multiplication/blob/master/imgs/figure2.png" height="700" />`
 
 Furthermore as seen in figure 3, the program is not scalable in terms of threads.  The rate of change of speedup decreases stagnates, and or fluctuates when increasing the number of threads.  These diminishing returns show that the greatest performance gains are made around 8 threads.
 
 **Figure 3: Rate of Change Strong Scaling Chart of Average, in terms of Fill Factor, Speedup for all 3 Matrices**
-<img src="https://github.com/jayteaftw/Sparse-Matrix-Multiplication/blob/master/imgs/figure3.png" height="700" />
+`<img src="https://github.com/jayteaftw/Sparse-Matrix-Multiplication/blob/master/imgs/figure3.png" height="700" />`
 
 When examining, the strong scaling chart for the average speedup in terms of thread count, we can see that there are hardly any gains being made with both the speedup and the speedup’s rate of change being overall constant as seen in figures 4 and 5. Furthermore, both 9000x35000*35000x5750 and 10000x10000*10000x10000 matrix multiplications outperformed the 20000x5300*5300x50000 matrix multiplication which follows since the latter matrix multiplication is much larger than the former matrices, and therefore there is an increases the number of computations and overall execution time of the program. Also as discussed before, the program favors matrices with larger column sizes for matrix A which could be another factor of why the 20000x5300*5300x50000 matrix multiplication performed noticeably worse.
 
 **Figure 4: Strong Scaling Chart of Average, in terms of Thread Count, Speedup for all 3 Matrices**
-<img src="https://github.com/jayteaftw/Sparse-Matrix-Multiplication/blob/master/imgs/figure4.png" height="500" />
+`<img src="https://github.com/jayteaftw/Sparse-Matrix-Multiplication/blob/master/imgs/figure4.png" height="500" />`
 
 **Figure 5: Rate of Change Strong Scaling Chart of Average, in terms of Thread Count, Speedup for all 3 Matrices**
-<img src="https://github.com/jayteaftw/Sparse-Matrix-Multiplication/blob/master/imgs/figure5.png" height="500" />
+`<img src="https://github.com/jayteaftw/Sparse-Matrix-Multiplication/blob/master/imgs/figure5.png" height="500" />`
 
 ## Appendicies
 
 **Table 5: Raw 10000x10000*10000x10000 Matrix Execution Time**
 
+| Thread Count/  Fill Factor | 0.05           | 0.1            | 0.15           | 0.2            | Avg Fill Factor |
+| -------------------------- | -------------- | -------------- | -------------- | -------------- | --------------- |
+| 1                          | 158,900,000.00 | 317,200,000.00 | 501,500,000.00 | 633,900,000.00 | 1.00            |
+| 2                          | 84,080,000.00  | 169,200,000.00 | 246,300,000.00 | 316,700,000.00 | 1.96            |
+| 4                          | 43,640,000.00  | 86,270,000.00  | 126,300,000.00 | 163,200,000.00 | 3.82            |
+| 8                          | 22,100,000.00  | 43,530,000.00  | 64,290,000.00  | 82,070,000.00  | 7.62            |
+| 12                         | 15,070,000.00  | 29,350,000.00  | 43,020,000.00  | 55,060,000.00  | 11.40           |
+| 14                         | 13,060,000.00  | 25,110,000.00  | 37,090,000.00  | 47,400,000.00  | 13.26           |
+| 16                         | 11,490,000.00  | 22,020,000.00  | 32,520,000.00  | 41,480,000.00  | 15.14           |
+| 20                         | 13,460,000.00  | 26,620,000.00  | 38,050,000.00  | 49,730,000.00  | 12.71           |
+| 24                         | 11,450,000.00  | 22,950,000.00  | 32,930,000.00  | 42,140,000.00  | 14.87           |
+| 28                         | 11,470,000.00  | 22,060,000.00  | 32,110,000.00  | 41,690,000.00  | 15.24           |
+| Avg Thread                 | 9.95           | 9.62           | 9.55           | 9.68           | 9.70            |
+
+
 **Table 6: Raw 20000x5300*5300x50000 Matrix Execution Time**
 
+| Thread Count/  Fill Factor | 0.05           | 0.1            | 0.15           | 0.2            | Avg Fill Factor |
+| -------------------------- | -------------- | -------------- | -------------- | -------------- | --------------- |
+| 1                          | 158,900,000.00 | 317,200,000.00 | 501,500,000.00 | 633,900,000.00 | 1.00            |
+| 2                          | 84,080,000.00  | 169,200,000.00 | 246,300,000.00 | 316,700,000.00 | 1.96            |
+| 4                          | 43,640,000.00  | 86,270,000.00  | 126,300,000.00 | 163,200,000.00 | 3.82            |
+| 8                          | 22,100,000.00  | 43,530,000.00  | 64,290,000.00  | 82,070,000.00  | 7.62            |
+| 12                         | 15,070,000.00  | 29,350,000.00  | 43,020,000.00  | 55,060,000.00  | 11.40           |
+| 14                         | 13,060,000.00  | 25,110,000.00  | 37,090,000.00  | 47,400,000.00  | 13.26           |
+| 16                         | 11,490,000.00  | 22,020,000.00  | 32,520,000.00  | 41,480,000.00  | 15.14           |
+| 20                         | 13,460,000.00  | 26,620,000.00  | 38,050,000.00  | 49,730,000.00  | 12.71           |
+| 24                         | 11,450,000.00  | 22,950,000.00  | 32,930,000.00  | 42,140,000.00  | 14.87           |
+| 28                         | 11,470,000.00  | 22,060,000.00  | 32,110,000.00  | 41,690,000.00  | 15.24           |
+| Avg Thread                 | 9.95           | 9.62           | 9.55           | 9.68           | 9.70            |
+
+
 **Table 7: Raw 9000x35000*35000x5750 Matrix Execution Time**
+
+| Thread Count/  Fill Factor | 0.05           | 0.1            | 0.15           | 0.2            | Avg Fill Factor |
+| -------------------------- | -------------- | -------------- | -------------- | -------------- | --------------- |
+| 1                          | 158,900,000.00 | 317,200,000.00 | 501,500,000.00 | 633,900,000.00 | 1.00            |
+| 2                          | 84,080,000.00  | 169,200,000.00 | 246,300,000.00 | 316,700,000.00 | 1.96            |
+| 4                          | 43,640,000.00  | 86,270,000.00  | 126,300,000.00 | 163,200,000.00 | 3.82            |
+| 8                          | 22,100,000.00  | 43,530,000.00  | 64,290,000.00  | 82,070,000.00  | 7.62            |
+| 12                         | 15,070,000.00  | 29,350,000.00  | 43,020,000.00  | 55,060,000.00  | 11.40           |
+| 14                         | 13,060,000.00  | 25,110,000.00  | 37,090,000.00  | 47,400,000.00  | 13.26           |
+| 16                         | 11,490,000.00  | 22,020,000.00  | 32,520,000.00  | 41,480,000.00  | 15.14           |
+| 20                         | 13,460,000.00  | 26,620,000.00  | 38,050,000.00  | 49,730,000.00  | 12.71           |
+| 24                         | 11,450,000.00  | 22,950,000.00  | 32,930,000.00  | 42,140,000.00  | 14.87           |
+| 28                         | 11,470,000.00  | 22,060,000.00  | 32,110,000.00  | 41,690,000.00  | 15.24           |
+| Avg Thread                 | 9.95           | 9.62           | 9.55           | 9.68           | 9.70            |
